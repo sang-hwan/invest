@@ -1,0 +1,9 @@
+# requirements.txt
+ccxt
+pandas
+numpy
+feedparser
+requests
+openai
+python-dotenv
+asyncpraw

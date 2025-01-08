@@ -1,0 +1,6 @@
+# 폴더 제외
+coinbot_env/
+example/
+
+# 파일 제외
+.env
