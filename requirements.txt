@@ -1,9 +1,10 @@
-# requirements.txt
 ccxt
 pandas
 numpy
 feedparser
 requests
+asyncpraw
 openai
 python-dotenv
-asyncpraw
+streamlit
+matplotlib

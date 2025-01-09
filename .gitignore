@@ -1,6 +1,8 @@
 # 폴더 제외
 coinbot_env/
 example/
+__pycache__/
 
 # 파일 제외
 .env
+*.db
