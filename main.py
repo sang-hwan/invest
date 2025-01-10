@@ -3,21 +3,27 @@ import time
 import datetime
 import os
 
-from trading_utils import fetch_ohlc_data, calculate_sma, calculate_rsi, calculate_macd
-import config
+from modules.trading_utils import (
+    fetch_ohlc_data,
+    calculate_sma,
+    calculate_rsi,
+    calculate_macd
+)
 
 # ---- 메모리 기반 import
-from data_collector import main as data_collector_main
-from summarize_content import main as summarize_content_main
-from sentiment_analysis import main as sentiment_analysis_main
+from modules.data_collector import main as data_collector_main
+from modules.summarize_content import main as summarize_content_main
+from modules.sentiment_analysis import main as sentiment_analysis_main
 
 # DB 관련 함수에서 decision_logs 로깅 지원
-from db_utils import (
+from modules.db_utils import (
     init_db, 
     load_last_state, 
     write_trade_log_db,       # 실제 매수/매도 체결 로그
     write_decision_log_db     # 모든 의사결정 (buy/sell/hold)
 )
+
+import config.config as config
 
 THRESHOLD_PERCENT = 5.0  # 예: 5% 이상 변동 시에만 감성 분석 실행
 

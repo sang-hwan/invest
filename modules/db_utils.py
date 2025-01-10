@@ -3,7 +3,7 @@ import sqlite3
 import os
 from datetime import datetime
 
-DB_FILE = "trade_logs.db"
+DB_FILE = "data/trade_logs.db"
 
 def init_db():
     """

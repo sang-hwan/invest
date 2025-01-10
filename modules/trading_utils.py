@@ -5,7 +5,7 @@ import time
 
 print("[LOG] trading_utils.py module is being imported...")
 
-from config import EXCHANGE
+from config.config import EXCHANGE
 
 def fetch_ohlc_data(symbol, timeframe='5m', limit=50):
     """ccxt를 통해 OHLCV 데이터를 받아오는 함수"""

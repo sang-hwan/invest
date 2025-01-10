@@ -3,15 +3,15 @@ import time
 import datetime
 import os
 
-from trading_utils import (
+from modules.trading_utils import (
     fetch_ohlc_data,
     calculate_sma,
     calculate_rsi,
     calculate_macd
 )
-import config
+import config.config as config
 
-from db_utils import init_db, load_last_state, write_trade_log_db, write_decision_log_db
+from modules.db_utils import init_db, load_last_state, write_trade_log_db, write_decision_log_db
 
 THRESHOLD_PERCENT = 5.0
 
