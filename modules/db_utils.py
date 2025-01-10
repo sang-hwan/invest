@@ -5,6 +5,10 @@ from datetime import datetime
 
 DB_FILE = "data/trade_logs.db"
 
+DB_DIR = os.path.dirname(DB_FILE)
+if not os.path.exists(DB_DIR):
+    os.makedirs(DB_DIR)
+
 def init_db():
     """
     trade_logs, decision_logs 테이블이 없으면 생성.
