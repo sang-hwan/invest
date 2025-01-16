@@ -11,12 +11,12 @@ if not os.path.exists(DB_DIR):
 
 def init_db():
     """
-    trade_logs, decision_logs 테이블이 없으면 생성.
+    trade_logs, decision_logs, meta_info 테이블이 없으면 생성.
     """
     conn = sqlite3.connect(DB_FILE)
     cur = conn.cursor()
     
-    # 기존 trade_logs 테이블
+    # trade_logs 테이블
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS trade_logs (
@@ -35,7 +35,7 @@ def init_db():
         """
     )
 
-    # 새로 추가한 decision_logs 테이블
+    # decision_logs 테이블
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS decision_logs (
@@ -49,6 +49,17 @@ def init_db():
         );
         """
     )
+
+    # meta_info 테이블
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS meta_info (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            key TEXT UNIQUE,
+            value TEXT
+        );
+        """
+    )
     
     conn.commit()
     conn.close()
@@ -57,13 +68,13 @@ def write_trade_log_db(current_price, rsi, sentiment,
                        action, trade_amount, trade_price,
                        balance, position, reason):
     """
-    매수/매도 체결이 발생할 때 trade_logs 테이블에 기록.
+    매수/매도 체결 시 trade_logs 테이블에 기록.
     """
     conn = sqlite3.connect(DB_FILE)
     cur = conn.cursor()
     cur.execute(
         """
-        INSERT INTO trade_logs 
+        INSERT INTO trade_logs
         (timestamp, current_price, rsi, sentiment,
          action, trade_amount, trade_price, balance,
          position, reason)
@@ -88,8 +99,7 @@ def write_trade_log_db(current_price, rsi, sentiment,
 def write_decision_log_db(current_price, rsi, sentiment,
                           decision, reason):
     """
-    매 분/매 tick마다 'buy', 'sell', 'hold' 의사결정을 기록.
-    (단, 실제 체결(매수/매도)은 trade_logs에도 별도로 기록)
+    모든 의사결정(buy/sell/hold) 시 decision_logs 테이블에 기록.
     """
     conn = sqlite3.connect(DB_FILE)
     cur = conn.cursor()
@@ -114,12 +124,10 @@ def write_decision_log_db(current_price, rsi, sentiment,
 
 def load_last_state():
     """
-    trade_logs 테이블의 '가장 최신' 레코드를 불러와서
-    (balance, position)을 반환한다.
-    만약 기록이 하나도 없다면 None을 반환.
+    trade_logs 테이블에서 가장 최신 레코드의 balance, position을 반환.
     """
     if not os.path.exists(DB_FILE):
-        return None  # DB 파일 자체가 없음
+        return None
 
     conn = sqlite3.connect(DB_FILE)
     cur = conn.cursor()
@@ -128,8 +136,65 @@ def load_last_state():
     conn.close()
 
     if row is None:
-        return None  # 테이블은 있지만 데이터가 없음
+        return None
     else:
         balance, position = row
         return (balance, position)
 
+
+# -------- 추가: 감성 점수 로드 함수 -----------
+def load_last_sentiment():
+    """
+    decision_logs 테이블에서 가장 최신 sentiment 값을 반환.
+    없으면 None.
+    """
+    if not os.path.exists(DB_FILE):
+        return None
+
+    conn = sqlite3.connect(DB_FILE)
+    cur = conn.cursor()
+    cur.execute("SELECT sentiment FROM decision_logs ORDER BY id DESC LIMIT 1")
+    row = cur.fetchone()
+    conn.close()
+
+    if row is None:
+        return None
+    else:
+        return float(row[0])  # sentiment가 None이 아니라고 가정, float 변환
+
+# -------- meta_info 테이블을 통한 key-value 저장/불러오기 --------
+def save_meta_info(key: str, value: str):
+    """
+    meta_info 테이블에 key-value를 Upsert.
+    """
+    conn = sqlite3.connect(DB_FILE)
+    cur = conn.cursor()
+    # upsert: key가 이미 존재하면 update, 아니면 insert
+    cur.execute(
+        """
+        INSERT INTO meta_info (id, key, value)
+        VALUES (
+            (SELECT id FROM meta_info WHERE key=?),
+            ?, ?
+        )
+        ON CONFLICT(key) DO UPDATE SET value=excluded.value
+        """,
+        (key, key, str(value))
+    )
+    conn.commit()
+    conn.close()
+
+def load_meta_info(key: str):
+    """
+    meta_info 테이블에서 key에 해당하는 value를 반환. 없으면 None.
+    """
+    conn = sqlite3.connect(DB_FILE)
+    cur = conn.cursor()
+    cur.execute("SELECT value FROM meta_info WHERE key=?", (key,))
+    row = cur.fetchone()
+    conn.close()
+
+    if row is None:
+        return None
+    else:
+        return row[0]

@@ -7,3 +7,5 @@ gpt_step/
 # 파일 제외
 .env
 *.db
+*.pem
+*.zip
